@@ -16,7 +16,7 @@ class Tracer:
     )
     
     # Methods that should not be traced
-    _NON_TRACEABLE_METHODS = {"start_trace", "stop_trace"}
+    _NON_TRACEABLE_METHODS = {"start_trace", "stop_trace","__enter__","__exit__"}
 
     def __init__(self, log_level=logging.INFO):
         self.trace_data = []
@@ -27,6 +27,16 @@ class Tracer:
 
     def stop_trace(self):
         sys.settrace(None)
+
+    def __enter__(self):
+        self.start_trace()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop_trace()
+        if exc_type:
+            logging.error(f"Exception occurred: {exc_val}")
+            traceback.print_exception(exc_type, exc_val, exc_tb)
 
     def trace_calls(self, frame, event, arg):
         func_name = frame.f_code.co_name
@@ -46,7 +56,7 @@ class Tracer:
 
         return self.trace_calls
 
-    def instrument(self, func):
+    def trace(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             start_time = time.time()
@@ -95,8 +105,6 @@ class Tracer:
 
 # Example usage
 if __name__ == "__main__":
-    tracer = Tracer()
-    tracer.start_trace()
 
     # Some test function with arguments
     def f(arg):
@@ -117,6 +125,5 @@ if __name__ == "__main__":
         h(789)
         return x + y + z
 
-    test_func(5, 10, z=15)
-
-    tracer.stop_trace()
+    with Tracer() as tracer:
+        test_func(5, 10, z=15)
