@@ -1,0 +1,13 @@
+line_length: 88
+target_version: py38
+exclude: 
+  - .eggs
+  - .git
+  - .mypy_cache
+  - .tox
+  - .venv
+  - _build
+  - buck-out
+  - build
+  - dist
+  - devlensenv
